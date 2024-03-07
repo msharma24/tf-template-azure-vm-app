@@ -130,7 +130,7 @@ resource "azurerm_network_security_group" "ssh_nsg" {
     protocol                   = "Tcp"
     source_port_range          = "*"
     destination_port_range     = "22"
-    source_address_prefix      = var.ssh_ip_address
+    source_address_prefix      = jsondecode(data.http.my_public_ip.body)["origin"]
     destination_address_prefix = "*"
   }
 }
@@ -139,4 +139,14 @@ resource "azurerm_network_security_group" "ssh_nsg" {
 resource "azurerm_network_interface_security_group_association" "ssh_nic" {
   network_interface_id      = azurerm_network_interface.linux_nic.id
   network_security_group_id = azurerm_network_security_group.ssh_nsg.id
+}
+
+
+data "http" "my_public_ip" {
+  url = "http://httpbin.org/ip"
+  # Optional: set request_headers, request_body, etc., if necessary
+}
+
+output "local_machine_public_ip" {
+  value = jsondecode(data.http.my_public_ip.body)["origin"]
 }
