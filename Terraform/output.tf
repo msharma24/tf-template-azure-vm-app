@@ -40,3 +40,8 @@ output "vm_admin_password" {
 output "vm_public_ip" {
   value = azurerm_linux_virtual_machine.linux_vm.public_ip_address
 }
+
+# azurerm_linux_virtual_machine. private IP addres
+output "vm_private_ip" {
+  value = azurerm_linux_virtual_machine.linux_vm.private_ip_address
+}

@@ -64,12 +64,11 @@ resource "azurerm_network_interface" "linux_nic" {
   location            = azurerm_resource_group.resource_group.location
   resource_group_name = azurerm_resource_group.resource_group.name
 
-
-
   ip_configuration {
     name                          = "testconfiguration1"
     subnet_id                     = azurerm_subnet.public_subnet.id
     private_ip_address_allocation = "Dynamic"
+    public_ip_address_id          = azurerm_public_ip.public_ip.id
   }
 }
 
@@ -115,4 +114,29 @@ resource "azurerm_linux_virtual_machine" "linux_vm" {
     sku       = "18.04-LTS"
     version   = "latest"
   }
+}
+
+# azurerm_network_security_group for SSH to var.My_ip_address
+resource "azurerm_network_security_group" "ssh_nsg" {
+  name                = "${random_pet.random_pet.id}-ssh-nsg"
+  resource_group_name = azurerm_resource_group.resource_group.name
+  location            = azurerm_resource_group.resource_group.location
+
+  security_rule {
+    name                       = "ssh"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "22"
+    source_address_prefix      = var.ssh_ip_address
+    destination_address_prefix = "*"
+  }
+}
+
+# azurerm_network_interface_security_group_association for nic
+resource "azurerm_network_interface_security_group_association" "ssh_nic" {
+  network_interface_id      = azurerm_network_interface.linux_nic.id
+  network_security_group_id = azurerm_network_security_group.ssh_nsg.id
 }
