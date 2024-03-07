@@ -41,6 +41,19 @@ resource "azurerm_network_security_group" "publc_nsg" {
     source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
+
+  # security rule to all outbound traffic on all protocols and all ports
+  security_rule {
+    name                       = "all-outbound"
+    priority                   = 200
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
 }
 
 #----------------------------------------------------------
@@ -131,6 +144,18 @@ resource "azurerm_network_security_group" "ssh_nsg" {
     source_port_range          = "*"
     destination_port_range     = "22"
     source_address_prefix      = jsondecode(data.http.my_public_ip.body)["origin"]
+    destination_address_prefix = "*"
+  }
+
+  security_rule {
+    name                       = "all-outbound"
+    priority                   = 200
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
 }
