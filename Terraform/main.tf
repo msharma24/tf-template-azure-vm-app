@@ -109,9 +109,18 @@ resource "azurerm_linux_virtual_machine" "linux_vm" {
   size                  = "Standard_DS1_v2"
   admin_username        = "adminuser"
   network_interface_ids = [azurerm_network_interface.linux_nic.id]
-  #public_ip_address     = azurerm_public_ip.public_ip.ip_address
 
-
+  user_data = base64encode(
+    <<-EOF
+    #!/bin/bash
+    exec > >(tee /tmp/install.log)
+    echo "Hello, World"
+    apt-get update -y
+    apt-get install -y apache2
+    systemctl start apache2
+    systemctl enable apache2
+    EOF
+  )
   admin_ssh_key {
     username   = "adminuser"
     public_key = file("~/.ssh/id_rsa.pub")
@@ -122,8 +131,8 @@ resource "azurerm_linux_virtual_machine" "linux_vm" {
   }
   source_image_reference {
     publisher = "Canonical"
-    offer     = "UbuntuServer"
-    sku       = "18.04-LTS"
+    offer     = "0001-com-ubuntu-server-focal"
+    sku       = "20_04-lts"
     version   = "latest"
   }
 }
@@ -143,6 +152,18 @@ resource "azurerm_network_security_group" "ssh_nsg" {
     source_port_range          = "*"
     destination_port_range     = "22"
     source_address_prefix      = jsondecode(data.http.my_public_ip.body)["origin"]
+    destination_address_prefix = "*"
+  }
+  # add security rule to open port 80 to all Inbound traffic
+  security_rule {
+    name                       = "http"
+    priority                   = 110
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "80"
+    source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
 
@@ -195,3 +216,5 @@ resource "azurerm_subnet_route_table_association" "public_route_table_associatio
   subnet_id      = azurerm_subnet.public_subnet.id
   route_table_id = azurerm_route_table.public_route_table.id
 }
+
+#----------------------------------------------------------
