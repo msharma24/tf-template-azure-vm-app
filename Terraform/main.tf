@@ -19,7 +19,7 @@ resource "azurerm_virtual_network" "vnet" {
   location            = azurerm_resource_group.resource_group.location
   resource_group_name = azurerm_resource_group.resource_group.name
   address_space       = ["10.0.0.0/16"]
-  dns_servers         = ["10.0.0.4"]
+  #  dns_servers         = ["8.8.8.8"]
 }
 
 #----------------------------------------------------------
@@ -55,7 +55,6 @@ resource "azurerm_network_security_group" "publc_nsg" {
     destination_address_prefix = "*"
   }
 }
-
 #----------------------------------------------------------
 # Public Subnet
 #---------------------------------------------------------
@@ -174,4 +173,25 @@ data "http" "my_public_ip" {
 
 output "local_machine_public_ip" {
   value = jsondecode(data.http.my_public_ip.body)["origin"]
+}
+
+
+
+# add a route tabnle to the azurerm_subnet for route traffic to the internet 
+resource "azurerm_route_table" "public_route_table" {
+  name                = "${random_pet.random_pet.id}-route-table"
+  resource_group_name = azurerm_resource_group.resource_group.name
+  location            = azurerm_resource_group.resource_group.location
+
+  route {
+    name           = "route1"
+    address_prefix = "0.0.0.0/0"
+    next_hop_type  = "Internet"
+  }
+}
+
+# azurerm_subnet_route_table_association
+resource "azurerm_subnet_route_table_association" "public_route_table_association" {
+  subnet_id      = azurerm_subnet.public_subnet.id
+  route_table_id = azurerm_route_table.public_route_table.id
 }
