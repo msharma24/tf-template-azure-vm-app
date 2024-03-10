@@ -234,38 +234,9 @@ resource "azurerm_monitor_action_group" "action_group" {
 
 }
 
-
-# resource "azurerm_monitor_metric_alert" "high-cpu-alert" {
-#   name                = "high-cpu-alert"
-#   resource_group_name = azurerm_resource_group.resource_group.name
-#   scopes              = [azurerm_linux_virtual_machine.linux_vm.id]
-#   description         = "This alert will fire when CPU usage exceeds 80%"
-#
-#   criteria {
-#     metric_namespace = "Microsoft.Compute/virtualMachines"
-#     metric_name      = "Percentage CPU"
-#     aggregation      = "Average"
-#     operator         = "GreaterThan"
-#     threshold        = 80
-#
-#     dimension {
-#       name     = "ResourceId"
-#       operator = "Include"
-#       values   = [azurerm_linux_virtual_machine.linux_vm.id]
-#     }
-#   }
-#
-#   action {
-#     action_group_id = azurerm_monitor_action_group.action_group.id
-#   }
-#
-#   tags = {
-#     environment = "dev"
-#   }
-# }
-#
-
-# write azurerm_monitor_metric_alert for linux_vm Percentage CPU
+#----------------------------------------------------------
+# Metric Alert
+# ---------------------------------------------------------
 resource "azurerm_monitor_metric_alert" "high-cpu-alert" {
   name                 = "high-cpu-alert"
   resource_group_name  = azurerm_resource_group.resource_group.name
@@ -273,18 +244,15 @@ resource "azurerm_monitor_metric_alert" "high-cpu-alert" {
   description          = "This alert will fire when CPU usage exceeds 80%"
   target_resource_type = "Microsoft.Compute/virtualMachines"
 
+  auto_mitigate = true
+  frequency     = "PT1M" # Possible values are PT1M, PT5M, PT15M, PT30M and PT1H. Defaults to PT1M.
+
   criteria {
     metric_namespace = "Microsoft.Compute/virtualMachines"
     metric_name      = "Percentage CPU"
     aggregation      = "Average"
     operator         = "GreaterThan"
     threshold        = 25
-
-    # dimension {
-    #   name     = "ResourceId"
-    #   operator = "Include"
-    #   values   = [azurerm_linux_virtual_machine.linux_vm.id]
-    # }
   }
 
   action {
