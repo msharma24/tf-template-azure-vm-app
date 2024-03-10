@@ -119,6 +119,7 @@ resource "azurerm_linux_virtual_machine" "linux_vm" {
     apt-get install -y apache2
     systemctl start apache2
     systemctl enable apache2
+    apt-get install -y stress
     EOF
   )
   admin_ssh_key {
