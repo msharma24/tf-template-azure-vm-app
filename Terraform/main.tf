@@ -106,7 +106,7 @@ resource "azurerm_linux_virtual_machine" "linux_vm" {
 
   resource_group_name   = azurerm_resource_group.resource_group.name
   location              = azurerm_resource_group.resource_group.location
-  size                  = "Standard_DS1_v2"
+  size                  = "Standard_B2ts_v2" #"Standard_DS1_v2" #"Standard_A1_v2"
   admin_username        = "adminuser"
   network_interface_ids = [azurerm_network_interface.linux_nic.id]
 
@@ -218,3 +218,79 @@ resource "azurerm_subnet_route_table_association" "public_route_table_associatio
 }
 
 #----------------------------------------------------------
+
+
+resource "azurerm_monitor_action_group" "action_group" {
+  name                = "example-actiongroup"
+  resource_group_name = azurerm_resource_group.resource_group.name
+  short_name          = "exampleag"
+
+  email_receiver {
+    name                    = "sendtoexample"
+    email_address           = var.action_group_email_address
+    use_common_alert_schema = true
+  }
+
+}
+
+
+# resource "azurerm_monitor_metric_alert" "high-cpu-alert" {
+#   name                = "high-cpu-alert"
+#   resource_group_name = azurerm_resource_group.resource_group.name
+#   scopes              = [azurerm_linux_virtual_machine.linux_vm.id]
+#   description         = "This alert will fire when CPU usage exceeds 80%"
+#
+#   criteria {
+#     metric_namespace = "Microsoft.Compute/virtualMachines"
+#     metric_name      = "Percentage CPU"
+#     aggregation      = "Average"
+#     operator         = "GreaterThan"
+#     threshold        = 80
+#
+#     dimension {
+#       name     = "ResourceId"
+#       operator = "Include"
+#       values   = [azurerm_linux_virtual_machine.linux_vm.id]
+#     }
+#   }
+#
+#   action {
+#     action_group_id = azurerm_monitor_action_group.action_group.id
+#   }
+#
+#   tags = {
+#     environment = "dev"
+#   }
+# }
+#
+
+# write azurerm_monitor_metric_alert for linux_vm Percentage CPU
+resource "azurerm_monitor_metric_alert" "high-cpu-alert" {
+  name                 = "high-cpu-alert"
+  resource_group_name  = azurerm_resource_group.resource_group.name
+  scopes               = [azurerm_linux_virtual_machine.linux_vm.id]
+  description          = "This alert will fire when CPU usage exceeds 80%"
+  target_resource_type = "Microsoft.Compute/virtualMachines"
+
+  criteria {
+    metric_namespace = "Microsoft.Compute/virtualMachines"
+    metric_name      = "Percentage CPU"
+    aggregation      = "Average"
+    operator         = "GreaterThan"
+    threshold        = 25
+
+    # dimension {
+    #   name     = "ResourceId"
+    #   operator = "Include"
+    #   values   = [azurerm_linux_virtual_machine.linux_vm.id]
+    # }
+  }
+
+  action {
+    action_group_id = azurerm_monitor_action_group.action_group.id
+  }
+
+  tags = {
+    environment = "dev"
+  }
+}
